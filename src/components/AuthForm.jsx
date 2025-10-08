@@ -16,13 +16,33 @@ export default function AuthForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Restrict "Full Name" to letters and spaces only
+    if (name === 'name' && !/^[A-Za-z\s]*$/.test(value)) return;
+
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const validateForm = () => {
+    if (!isLogin && !formData.name.trim()) return 'Full name is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
+      return 'Please enter a valid email address';
+    if (formData.password.length < 6)
+      return 'Password must be at least 6 characters long';
+    return '';
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const result = isLogin
@@ -55,66 +75,55 @@ export default function AuthForm() {
           </CardTitle>
           <CardDescription>
             {isLogin
-              ? 'Track your carbon footprint and make a difference'
-              : 'Start your journey to a sustainable future'}
+              ? 'Track your carbon footprint and make a difference.'
+              : 'Start your journey to a sustainable future.'}
           </CardDescription>
         </CardHeader>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <CardContent className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                <div className="relative">
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="Enter your name"
-                    className="pl-10"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required={!isLogin}
+                />
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label> 
-              <div className="relative ">
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  className="pl-12"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  className="pl-10"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
             </div>
 
-            {error && (
-              <p className="text-destructive text-sm text-center">{error}</p>
-            )}
+            {error && <p className="text-destructive text-sm text-center">{error}</p>}
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4">
@@ -124,7 +133,10 @@ export default function AuthForm() {
 
             <button
               type="button"
-              onClick={() => setIsLogin((prev) => !prev)}
+              onClick={() => {
+                setIsLogin((prev) => !prev);
+                setError('');
+              }}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               {isLogin
